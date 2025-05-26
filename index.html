@@ -12,14 +12,18 @@
     .tabs { display: flex; gap: 10px; margin-bottom: 1rem; }
     .tabs button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
     .tabs button.active { background: white; color: #764ba2; font-weight: bold; }
-    .card { background: linear-gradient(135deg, #ff6b6b, #ffd93d); color: white; border-radius: 20px; width: 280px; height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); cursor: pointer; transition: transform 0.5s ease; }
+    .card { background: #eeeeee; color: #292929; border-radius: 20px; width: 280px; height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); cursor: pointer; transition: transform 0.5s ease; }
     .char { font-size: 5rem; font-weight: bold; }
-    .romanized, .meaning { margin-top: 0.5rem; font-size: 1.2rem; }
-    .examples { margin-top: 1rem; font-size: 1rem; text-align: center; }
+    .romanized, .meaning, .examples {
+  color: #6a469d;
+}
     .btns { margin-top: 2rem; display: flex; gap: 10px; }
     button { padding: 10px 20px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; background-color: rgba(255,255,255,0.2); color: white; backdrop-filter: blur(10px); }
     button:hover { background-color: rgba(255,255,255,0.3); }
-  </style>
+  .romanized {
+  font-weight: bold;
+}
+</style>
 </head>
 <body>
   <h1>Daily Hangul Flashcard</h1>
@@ -36,7 +40,6 @@
     <div class="examples" id="examples"></div>
   </div>
   <div class="btns">
-    <button id="play-btn">Play</button>
     <button id="next-btn">Next</button>
   </div>
 <script>
@@ -70,10 +73,6 @@ function render() {
 
 function flipCard() {
   document.getElementById('flashcard').classList.toggle('flipped');
-}
-
-function playAudio() {
-  new Audio(filteredData()[current].audio).play().catch(() => alert('Playback blocked'));
 }
 
 function resetCard() {
@@ -413,7 +412,6 @@ let stats = { todayCount: 0, streak: 0, weeklyLearned: 0 };
 document.getElementById('tab-all').addEventListener('click', () => setMode('all'));
 document.getElementById('tab-vowel').addEventListener('click', () => setMode('vowel'));
 document.getElementById('tab-consonant').addEventListener('click', () => setMode('consonant'));
-document.getElementById('play-btn').addEventListener('click', playAudio);
 document.getElementById('next-btn').addEventListener('click', resetCard);
 document.getElementById('flashcard').addEventListener('click', flipCard);
 

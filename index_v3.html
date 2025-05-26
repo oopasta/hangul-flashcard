@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Hangul Flashcard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 0.5rem 0;
+    }
+    .stats {
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .tabs button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .tabs button.active {
+      background: white;
+      color: #764ba2;
+      font-weight: bold;
+    }
+    .card {
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+      color: white;
+      border-radius: 20px;
+      width: 280px;
+      height: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: transform 0.5s ease;
+    }
+    .char {
+      font-size: 5rem;
+      font-weight: bold;
+    }
+    .romanized, .meaning {
+      margin-top: 0.5rem;
+      font-size: 1.2rem;
+    }
+    .examples {
+      margin-top: 1rem;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .btns {
+      margin-top: 2rem;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      backdrop-filter: blur(10px);
+    }
+    button:hover {
+      background-color: rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <h1>Daily Hangul Flashcard</h1>
+  <div class="stats" id="stats">今日練習：0 次　｜　已連續練習：0 天　｜　本週進度：0 / 40</div>
+  <div class="tabs">
+    <button onclick="setMode('all', event)" class="active">全部 (40音)</button>
+    <button onclick="setMode('vowel', event)">母音 (21)</button>
+    <button onclick="setMode('consonant', event)">子音 (19)</button>
+  </div>
+  <div class="card" onclick="flipCard()">
+    <div class="char" id="char">?</div>
+    <div class="romanized" id="romanized"></div>
+    <div class="meaning" id="meaning"></div>
+    <div class="examples" id="examples"></div>
+  </div>
+  <div class="btns">
+    <button onclick="playAudio()">聽發音</button>
+    <button onclick="resetCard()">換一個</button>
+  </div>
+<script>
+const allData = [
+  // 子音與母音（基礎補齊）
+  {
+    char: "ㄱ", romanized: "g/k", type: "consonant", meaning: "像『哥』的聲音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b315d4ac-b4a1-490f-b0ac-8c9781661555.mp3",
+    examples: [
+      { word: "고기", meaning: "肉", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1f7b18fd-8c6c-4a2e-b7fb-5f2a85ea6be7.mp3" },
+      { word: "가방", meaning: "書包", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1cc82dfc-99d9-446f-a021-e01305e50a45.mp3" }
+    ]
+  },
+  {
+    char: "ㄴ", romanized: "n", type: "consonant", meaning: "像『你』的聲音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/195dfce2-b8a7-4437-906d-cb4058b420b4.mp3",
+    examples: [
+      { word: "누나", meaning: "姊姊（男稱）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/bb5d3b26-b6f6-47b5-bd5f-8d8658ee5d97.mp3" },
+      { word: "나무", meaning: "樹", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b4b709fb-7e1a-4d2a-bc26-1a9d7db1d716.mp3" }
+    ]
+  },
+  {
+    char: "ㅏ", romanized: "a", type: "vowel", meaning: "嘴巴張大，發『啊』音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/50555b7e-3950-4c33-8ae7-1c4099e6f765.mp3",
+    examples: [
+      { word: "아기", meaning: "嬰兒", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/5f5e9d9e-3f3e-4b8d-92ef-799f29f7d2fc.mp3" },
+      { word: "아빠", meaning: "爸爸", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/64ff62db-82b5-4f3f-9a97-9eb1533a2846.mp3" }
+    ]
+  },
+  {
+    char: "ㅓ", romanized: "eo", type: "vowel", meaning: "嘴型扁扁地發『喔』音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/fd15285d-0625-4ee1-9cfa-5bfaeb239f43.mp3",
+    examples: [
+      { word: "엄마", meaning: "媽媽", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e1cdb016-1ab6-48e0-a876-f47ed4a9d92a.mp3" },
+      { word: "언니", meaning: "姊姊（女稱）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/df9a5091-bd2a-4651-8618-5c6f662dfb92.mp3" }
+    ]
+  },
+  {
+    char: "ㅗ", romanized: "o", type: "vowel", meaning: "嘴巴收圓，發『喔』音（短）",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4c208b9f-6a6e-4d42-bffd-0e3188dfc37f.mp3",
+    examples: [
+      { word: "오이", meaning: "小黃瓜", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/99bbdf2e-3a76-496d-a2d8-2fc233dfcab3.mp3" },
+      { word: "오빠", meaning: "哥哥（女稱）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c1291b86-4417-43a2-9dd5-5ee4dffb1da4.mp3" }
+    ]
+  }
+,
+  {
+    char: "ㅜ", romanized: "u", type: "vowel", meaning: "嘴巴突起，發『嗚』音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/11eaf4ef-71a5-40ae-8a86-8ff097530b42.mp3",
+    examples: [
+      { word: "우유", meaning: "牛奶", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/42c316a0-217a-4c92-a64f-05873b11d946.mp3" },
+      { word: "우리", meaning: "我們", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f5037dc5-0c0b-4341-97f5-8ffb6b6f7a13.mp3" }
+    ]
+  },
+  {
+    char: "ㅣ", romanized: "i", type: "vowel", meaning: "嘴巴自然微張，發『衣』音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/75f5ec3e-8f95-4b7d-a4e5-5fc1fa64ae20.mp3",
+    examples: [
+      { word: "이름", meaning: "名字", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/11ce53e8-37cc-4213-a80c-6c6f7d7b3a36.mp3" },
+      { word: "이빨", meaning: "牙齒", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b6e71720-7161-4c06-9df1-8046318e7ae4.mp3" }
+    ]
+  }
+,
+  {
+    char: "ㄷ", romanized: "d/t", type: "consonant", meaning: "舌尖頂住上齒齦，像『的』音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/05f9e1b3-f72b-4233-a85d-fc75cc0dbe2e.mp3",
+    examples: [
+      { word: "달", meaning: "月亮", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/6bfc58db-b5fc-47b0-aafe-c34322f1c185.mp3" },
+      { word: "다리", meaning: "腿、橋", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/cb80d7b3-4c79-4f79-aaa7-b6c92a8d4b87.mp3" }
+    ]
+  },
+  {
+    char: "ㄹ", romanized: "r/l", type: "consonant", meaning: "介於 r 與 l 音之間，舌頭彈一下",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4b64db03-6e48-4ae6-8ec4-3c25a1e529c3.mp3",
+    examples: [
+      { word: "라면", meaning: "拉麵", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/5a167441-d3b7-4ef8-b5c1-2ce99fc94de5.mp3" },
+      { word: "바람", meaning: "風", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/9e8a5bdb-80e2-4e57-a64a-967cdb57b4bc.mp3" }
+    ]
+  }
+,
+  {
+    char: "ㅁ", romanized: "m", type: "consonant", meaning: "雙唇閉合後放開，像『媽』的聲音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/9ef2b686-7d18-44d1-981e-b43707d14a66.mp3",
+    examples: [
+      { word: "머리", meaning: "頭", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/ab0110a9-bc4d-4bc7-a80c-781f0d52808d.mp3" },
+      { word: "물", meaning: "水", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/22f7604e-9aa4-48ef-8933-5eb92c79c9b3.mp3" }
+    ]
+  },
+  {
+    char: "ㅂ", romanized: "b/p", type: "consonant", meaning: "雙唇輕閉後爆破音，像『爸』的聲音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e66a1cb2-bb26-4f62-87fc-132ad99fc4d9.mp3",
+    examples: [
+      { word: "바나나", meaning: "香蕉", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b5f89362-4d38-40bc-81fa-949db9fcdbdf.mp3" },
+      { word: "바다", meaning: "海", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c5011bfa-e296-4a3c-8456-7c4f1a190a55.mp3" }
+    ]
+  },
+  {
+    char: "ㅅ", romanized: "s", type: "consonant", meaning: "舌尖靠近齒齦摩擦音，像『思』的聲音",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7d2511db-88b5-46ed-8e52-5ff0c6e24e79.mp3",
+    examples: [
+      { word: "사과", meaning: "蘋果", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e79c1e17-7406-4385-ae30-7d9a34d274f6.mp3" },
+      { word: "신발", meaning: "鞋子", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/d0c78d47-4749-4414-a77d-659c9c63b17b.mp3" }
+    ]
+  },
+  {
+    char: "ㅇ", romanized: "ng / ∅", type: "consonant", meaning: "句首不發音，句尾為鼻音『ng』",
+    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/15ef0b66-d3df-46f5-83e2-2b126f63b681.mp3",
+    examples: [
+      { word: "엄마", meaning: "媽媽", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e1cdb016-1ab6-48e0-a876-f47ed4a9d92a.mp3" },
+      { word: "사랑", meaning: "愛", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b169dddb-bc21-4b7b-810e-1790e7cf1a53.mp3" }
+    ]
+  }
+];
+
+let current = 0;
+let mode = 'all';
+let stats = {
+  todayCount: 0,
+  streak: 1,
+  weeklyLearned: 2
+};
+
+function setMode(m, event) {
+  mode = m;
+  document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  resetCard();
+}
+
+function filteredData() {
+  if (mode === 'all') return allData;
+  return allData.filter(d => d.type === mode);
+}
+
+function render() {
+  const d = filteredData()[current];
+  document.getElementById('char').innerText = d.char;
+  document.getElementById('romanized').innerText = d.romanized;
+  document.getElementById('meaning').innerText = d.meaning;
+  document.getElementById('examples').innerHTML = d.examples.map(e => `${e.word}（${e.meaning}）`).join('<br>');
+  document.getElementById('stats').innerHTML = `Participated Today: <span style="color:#feba49;font-weight: 700;">${stats.todayCount}</span> times　｜　Continuously Practiced: <span style="color:#feba49;font-weight:bold;">${stats.streak}</span> days　｜　Weekly Progress: <span style="color:#feba49;font-weight:bold;">${stats.weeklyLearned}</span> / 40`;
+}
+
+function flipCard() {
+  document.querySelector('.card').classList.toggle('flipped');
+}
+
+function playAudio() {
+  const d = filteredData()[current];
+  const audio = new Audio(d.audio);
+  audio.play().catch(e => alert('瀏覽器可能阻擋自動播放'));
+}
+
+function resetCard() {
+  const pool = filteredData();
+  current = Math.floor(Math.random() * pool.length);
+  stats.todayCount++;
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

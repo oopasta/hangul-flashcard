@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日一音｜韓文卡片遊戲</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .flip-card {
+      perspective: 1000px;
+    }
+    .flip-card-inner {
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-card-front, .flip-card-back {
+      backface-visibility: hidden;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .flip-card-back {
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body class="bg-neutral-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+  <div class="w-full max-w-md flex flex-col items-center space-y-6">
+    <h1 class="text-xl font-bold text-blue-600">每日一音：韓文40音練習</h1>
+    <div id="card" onclick="flipCard()" class="flip-card bg-white w-full h-60 rounded-2xl shadow-xl cursor-pointer">
+      <div class="flip-card-inner rounded-2xl">
+        <div class="flip-card-front flex items-center justify-center text-7xl font-bold text-gray-900 rounded-2xl bg-white">?</div>
+        <div class="flip-card-back flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-white">
+          <div id="char" class="text-6xl font-bold text-gray-900 mb-2"></div>
+          <p id="romanized" class="text-lg font-semibold text-gray-700"></p>
+          <p id="meaning" class="text-gray-500 mb-2"></p>
+          <div id="examples" class="space-y-1"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fixed bottom-4 inset-x-0 flex justify-around px-6">
+      <button id="play-btn" class="bg-blue-500 text-white px-4 py-2 rounded-full shadow hover:bg-blue-600">🔈 聽發音</button>
+      <button onclick="resetCard()" class="bg-red-400 text-white px-4 py-2 rounded-full shadow hover:bg-red-500">今天不再出現</button>
+    </div>
+  </div>
+<script>
+const data = [ { char: "ㄱ", romanized: "g/k", meaning: "像『哥』的聲音", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b315d4ac-b4a1-490f-b0ac-8c9781661555.mp3", examples: [ { word: "고기", meaning: "肉", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1f7b18fd-8c6c-4a2e-b7fb-5f2a85ea6be7.mp3" }, { word: "가방", meaning: "書包", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1cc82dfc-99d9-446f-a021-e01305e50a45.mp3" } ] }, { char: "ㄴ", romanized: "n", meaning: "舌頂碰上顎，像『你』的音", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/195dfce2-b8a7-4437-906d-cb4058b420b4.mp3", examples: [ { word: "누나", meaning: "姊姊（男稱）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/bb5d3b26-b6f6-47b5-bd5f-8d8658ee5d97.mp3" }, { word: "나무", meaning: "樹", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b4b709fb-7e1a-4d2a-bc26-1a9d7db1d716.mp3" } ] }, { char: "ㄷ", romanized: "d/t", meaning: "像『的』的聲音（無氣）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/05f9e1b3-f72b-4233-a85d-fc75cc0dbe2e.mp3", examples: [ { word: "달", meaning: "月亮", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/6bfc58db-b5fc-47b0-aafe-c34322f1c185.mp3" }, { word: "다리", meaning: "橋、腿", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/cb80d7b3-4c79-4f79-aaa7-b6c92a8d4b87.mp3" } ] } ];
+let current = null;
+function setNewCard() {
+  if (data.length === 0) return;
+  current = Math.floor(Math.random() * data.length);
+  const todayKey = new Date().toISOString().slice(0, 10);
+  localStorage.setItem("dailyChar", JSON.stringify({ date: todayKey, index: current }));
+}
+function loadCardFromStorage() {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const stored = localStorage.getItem("dailyChar");
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.date === todayKey && parsed.index >= 0 && parsed.index < data.length) {
+        current = parsed.index;
+        return;
+      }
+    } catch (e) {
+      console.warn("Invalid storage format", e);
+    }
+  }
+  setNewCard();
+}
+function renderCard() {
+  if (current === null || !data[current]) return;
+  const d = data[current];
+  document.getElementById("char").innerText = d.char;
+  document.getElementById("romanized").innerText = d.romanized;
+  document.getElementById("meaning").innerText = d.meaning;
+  const ex = document.getElementById("examples");
+  ex.innerHTML = d.examples.map((e, i) => `<p class="text-sm text-gray-700"><span class="font-bold">${e.word}</span> (${e.meaning}) <button onclick="playExample(${i})" class="text-blue-500">🔈</button></p>`).join("");
+}
+function flipCard() {
+  document.getElementById("card").classList.add("flipped");
+}
+function resetCard() {
+  localStorage.removeItem("dailyChar");
+  document.getElementById("card").classList.remove("flipped");
+  setNewCard();
+  renderCard();
+}
+document.getElementById("play-btn").addEventListener("click", () => {
+  if (current === null || !data[current]) return;
+  const audio = new Audio(data[current].audio);
+  audio.play();
+});
+function playExample(i) {
+  if (current === null || !data[current] || !data[current].examples[i]) return;
+  const audio = new Audio(data[current].examples[i].audio);
+  audio.play();
+}
+loadCardFromStorage();
+renderCard();
+</script>
+</body>
+</html>

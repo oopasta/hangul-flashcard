@@ -16,15 +16,16 @@
     .card { background: #eeeeee; color: #292929; border-radius: 20px; width: 280px; height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); cursor: pointer; transition: transform 0.5s ease; }
     .char { font-size: 5rem; font-weight: bold; }
     .romanized, .meaning, .examples {
-  color: #6a469d;
-}
+      color: #6a469d;
+    }
     .btns { margin-top: 2rem; display: flex; gap: 10px; }
     button { padding: 10px 20px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; background-color: rgba(255,255,255,0.2); color: white; backdrop-filter: blur(10px); }
     button:hover { background-color: rgba(255,255,255,0.3); }
-  .romanized {
-  font-weight: bold;
-}
-</style>
+    .romanized {
+      font-weight: bold;
+    }
+    .highlight { font-weight: bold; color: #feba49; }
+  </style>
 </head>
 <body>
   <h1>Daily Hangul Flashcard</h1>
@@ -44,380 +45,105 @@
     <button id="next-btn">Next</button>
   </div>
 <script>
-// 定義函式於使用前
-function setMode(newMode) {
-  mode = newMode;
-  document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
-  document.getElementById(`tab-${newMode}`).classList.add('active');
-  resetCard();
-}
+const allData = [
+  { char: "ㅏ", romanized: "a", type: "vowel", meaning: "像『啊』的發音", examples: [ { word: "아빠", meaning: "爸爸" }, { word: "사랑", meaning: "愛" } ] },
+  { char: "ㅓ", romanized: "eo", type: "vowel", meaning: "像『喔』的發音", examples: [ { word: "어머니", meaning: "母親" }, { word: "걱정", meaning: "擔心" } ] },
+  { char: "ㅑ", romanized: "ya", type: "vowel", meaning: "像『啊』的發音，前加 y", examples: [ { word: "야채", meaning: "蔬菜" }, { word: "야구", meaning: "棒球" } ] },
+  { char: "ㅕ", romanized: "yeo", type: "vowel", meaning: "像『喔』的發音，前加 y", examples: [ { word: "여자", meaning: "女生" }, { word: "역사", meaning: "歷史" } ] },
+  { char: "ㄱ", romanized: "g/k", type: "consonant", meaning: "像英文的 g 或 k 音", examples: [ { word: "가방", meaning: "書包" }, { word: "꿈", meaning: "夢想" } ] },
+  { char: "ㄴ", romanized: "n", type: "consonant", meaning: "像英文的 n 音", examples: [ { word: "나무", meaning: "樹" }, { word: "눈", meaning: "雪" } ] },
+  { char: "ㄷ", romanized: "d/t", type: "consonant", meaning: "像英文的 d 或 t 音", examples: [ { word: "다리", meaning: "橋" }, { word: "달", meaning: "月亮" } ] },
+  { char: "ㄹ", romanized: "r/l", type: "consonant", meaning: "介於 r 和 l 之間的音", examples: [ { word: "라면", meaning: "拉麵" }, { word: "물", meaning: "水" } ] },
+  { char: "ㅁ", romanized: "m", type: "consonant", meaning: "像英文的 m 音", examples: [ { word: "머리", meaning: "頭" }, { word: "마음", meaning: "心" } ] },
+  { char: "ㅂ", romanized: "b/p", type: "consonant", meaning: "像英文的 b 或 p 音", examples: [ { word: "바다", meaning: "海" }, { word: "비", meaning: "雨" } ] },
+  { char: "ㅅ", romanized: "s", type: "consonant", meaning: "像英文的 s 音", examples: [ { word: "사람", meaning: "人" }, { word: "시간", meaning: "時間" } ] },
+  { char: "ㅇ", romanized: "ng", type: "consonant", meaning: "無聲或 ng 音", examples: [ { word: "아이", meaning: "小孩" }, { word: "공", meaning: "球" } ] },
+  { char: "ㅈ", romanized: "j", type: "consonant", meaning: "像英文的 j 音", examples: [ { word: "자동차", meaning: "汽車" }, { word: "주말", meaning: "週末" } ] },
+  { char: "ㅊ", romanized: "ch", type: "consonant", meaning: "像英文的 ch 音（有氣）", examples: [ { word: "친구", meaning: "朋友" }, { word: "초콜릿", meaning: "巧克力" } ] },
+  { char: "ㅋ", romanized: "k", type: "consonant", meaning: "像『卡』的聲音（有氣）", examples: [ { word: "코", meaning: "鼻子" }, { word: "칼", meaning: "刀" } ] },
+  { char: "ㅌ", romanized: "t", type: "consonant", meaning: "像『特』的聲音（有氣）", examples: [ { word: "토끼", meaning: "兔子" }, { word: "탈", meaning: "面具" } ] },
+  { char: "ㅍ", romanized: "p", type: "consonant", meaning: "像『噗』的聲音（有氣）", examples: [ { word: "피자", meaning: "披薩" }, { word: "포도", meaning: "葡萄" } ] },
+  { char: "ㅎ", romanized: "h", type: "consonant", meaning: "像英文的 h 音", examples: [ { word: "하늘", meaning: "天空" }, { word: "호수", meaning: "湖" } ] },
+  { char: "ㄲ", romanized: "kk", type: "consonant", meaning: "濃音 kk", examples: [ { word: "깨끗", meaning: "乾淨" }, { word: "꽃", meaning: "花" } ] },
+  { char: "ㄸ", romanized: "tt", type: "consonant", meaning: "濃音 tt", examples: [ { word: "딸기", meaning: "草莓" }, { word: "땅", meaning: "土地" } ] },
+  { char: "ㅃ", romanized: "pp", type: "consonant", meaning: "濃音 pp", examples: [ { word: "빵", meaning: "麵包" }, { word: "뽀뽀", meaning: "親親" } ] },
+  { char: "ㅆ", romanized: "ss", type: "consonant", meaning: "濃音 ss", examples: [ { word: "쓰다", meaning: "寫" }, { word: "쌀", meaning: "米" } ] },
+  { char: "ㅉ", romanized: "jj", type: "consonant", meaning: "濃音 jj", examples: [ { word: "짜다", meaning: "鹹" }, { word: "쯤", meaning: "左右、大約" } ] },
+
+  { char: "ㅐ", romanized: "ae", type: "vowel", meaning: "像『欸』的發音", examples: [ { word: "애기", meaning: "小孩" }, { word: "해", meaning: "太陽" } ] },
+  { char: "ㅔ", romanized: "e", type: "vowel", meaning: "像『欸』但略短", examples: [ { word: "에어컨", meaning: "冷氣" }, { word: "세수", meaning: "洗臉" } ] },
+  { char: "ㅒ", romanized: "yae", type: "vowel", meaning: "像『欸』前加 y", examples: [ { word: "얘기", meaning: "談話" }, { word: "얘", meaning: "這孩子" } ] },
+  { char: "ㅖ", romanized: "ye", type: "vowel", meaning: "像『耶』音", examples: [ { word: "예쁜", meaning: "漂亮" }, { word: "예", meaning: "是" } ] },
+  { char: "ㅗ", romanized: "o", type: "vowel", meaning: "像『喔』收口音", examples: [ { word: "오빠", meaning: "哥哥" }, { word: "고기", meaning: "肉" } ] },
+  { char: "ㅛ", romanized: "yo", type: "vowel", meaning: "像英文 yo", examples: [ { word: "요리", meaning: "料理" }, { word: "요즘", meaning: "最近" } ] },
+  { char: "ㅜ", romanized: "u", type: "vowel", meaning: "像英文的 oo", examples: [ { word: "우유", meaning: "牛奶" }, { word: "문", meaning: "門" } ] },
+  { char: "ㅠ", romanized: "yu", type: "vowel", meaning: "像英文 you", examples: [ { word: "유리", meaning: "玻璃" }, { word: "휴지", meaning: "衛生紙" } ] },
+  { char: "ㅡ", romanized: "eu", type: "vowel", meaning: "嘴平扁發音 eu", examples: [ { word: "으쓱", meaning: "聳肩" }, { word: "음악", meaning: "音樂" } ] },
+  { char: "ㅣ", romanized: "i", type: "vowel", meaning: "像英文 e 音", examples: [ { word: "이름", meaning: "名字" }, { word: "길", meaning: "路" } ] },
+  { char: "ㅘ", romanized: "wa", type: "vowel", meaning: "像『哇』音", examples: [ { word: "와인", meaning: "紅酒" }, { word: "과일", meaning: "水果" } ] },
+  { char: "ㅙ", romanized: "wae", type: "vowel", meaning: "像『呱欸』音", examples: [ { word: "왜", meaning: "為什麼" }, { word: "괜찮아", meaning: "沒關係" } ] },
+  { char: "ㅚ", romanized: "oe", type: "vowel", meaning: "像『唉』音", examples: [ { word: "외국", meaning: "外國" }, { word: "회사", meaning: "公司" } ] },
+  { char: "ㅝ", romanized: "wo", type: "vowel", meaning: "像『喔』前加 w", examples: [ { word: "워터", meaning: "水(water)" }, { word: "원", meaning: "韓元" } ] },
+  { char: "ㅞ", romanized: "we", type: "vowel", meaning: "像『喂』音", examples: [ { word: "웨딩", meaning: "婚禮" }, { word: "웹", meaning: "網" } ] },
+  { char: "ㅟ", romanized: "wi", type: "vowel", meaning: "像英文 we 音", examples: [ { word: "위", meaning: "上" }, { word: "위험", meaning: "危險" } ] },
+  { char: "ㅢ", romanized: "ui", type: "vowel", meaning: "嘴型扁小難發音", examples: [ { word: "의자", meaning: "椅子" }, { word: "의사", meaning: "醫生" } ] }
+];
+
+let current = 0;
+let flipped = false;
+let mode = 'all';
+let stats = { todayCount: 0, days: 0, progress: 0 };
 
 function filteredData() {
-  return mode === 'all' ? allData : allData.filter(d => d.type === mode);
-}
-
-function updateStats() {
-  document.getElementById('stats').innerHTML =
-    `Participated Today: <span style="color:#feba49;font-weight:700;">${stats.todayCount}</span> times ｜ ` +
-    `Continuously Practiced: <span style="color:#feba49;font-weight:700;">${stats.streak}</span> days ｜ ` +
-    `Weekly Progress: <span style="color:#feba49;font-weight:700;">${stats.weeklyLearned}</span> / 40`;
+  if (mode === 'vowel') return allData.filter(d => d.type === 'vowel');
+  if (mode === 'consonant') return allData.filter(d => d.type === 'consonant');
+  return allData;
 }
 
 function render() {
-  const d = filteredData()[current];
-  document.getElementById('char').innerText = d.char;
-  document.getElementById('romanized').innerText = d.romanized;
-  document.getElementById('meaning').innerText = d.meaning;
-  document.getElementById('examples').innerHTML = d.examples.map(e => `${e.word} (${e.meaning})`).join('<br>');
-  updateStats();
+  const d = flipped ? filteredData()[current] : null;
+  document.getElementById('char').innerText = flipped ? d.char : '?';
+  document.getElementById('romanized').innerText = flipped ? d.romanized : '';
+  document.getElementById('meaning').innerText = flipped ? d.meaning : '';
+  document.getElementById('examples').innerHTML = flipped ? d.examples.map(e => `${e.word}（${e.meaning}）`).join('<br>') : '';
+  document.getElementById('stats').innerHTML = `Participated Today: <span class="highlight">${stats.todayCount}</span> times ｜ Continuously Practiced: <span class="highlight">${stats.days}</span> days ｜ Weekly Progress: <span class="highlight">${stats.progress}</span> / 40`;
 }
 
-function flipCard() {
-  document.getElementById('flashcard').classList.toggle('flipped');
-}
+document.getElementById('flashcard').addEventListener('click', () => {
+  if (!flipped) {
+    const stored = localStorage.getItem(`card-${mode}`);
+    if (stored) {
+      current = parseInt(stored);
+    } else {
+      current = Math.floor(Math.random() * filteredData().length);
+      localStorage.setItem(`card-${mode}`, current);
+    }
+    flipped = true;
+    stats.todayCount++;
+    render();
+  }
+});
 
-function resetCard() {
+document.getElementById('next-btn').addEventListener('click', () => {
   current = Math.floor(Math.random() * filteredData().length);
+  localStorage.setItem(`card-${mode}`, current);
+  flipped = true;
   stats.todayCount++;
   render();
-}
+});
 
-// 資料與初始值
-const allData = [
-  {
-    char: "ㅊ", romanized: "ch", type: "consonant", meaning: "像『七』的氣音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/73170396-7636-4020-8b70-bbbd9b43078d.mp3",
-    examples: [
-      { word: "책", meaning: "書", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e040426d-5d92-4ef3-a86b-07bbbc66fa59.mp3" },
-      { word: "초코", meaning: "巧克力", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b009073c-875d-4709-9991-60c4ed0bfb44.mp3" }
-    ]
-  },
-  {
-    char: "ㅋ", romanized: "k", type: "consonant", meaning: "像『卡』的氣音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/14a38968-4fe5-43f6-8f4f-9de8c52f52e4.mp3",
-    examples: [
-      { word: "코", meaning: "鼻子", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c0aeb0ff-18df-463e-b0a0-f4b9a8e14d4a.mp3" },
-      { word: "칼", meaning: "刀", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4f27f29a-0c12-4b45-a998-b44595a97efb.mp3" }
-    ]
-  },
-  {
-    char: "ㅌ", romanized: "t", type: "consonant", meaning: "像『他』的氣音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/cd3ab5ec-8b1e-499f-9bd9-735b1e027f23.mp3",
-    examples: [
-      { word: "토끼", meaning: "兔子", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4194e015-6d93-4a7e-a1df-c3b91ee93b9a.mp3" },
-      { word: "태양", meaning: "太陽", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/8327e147-4a33-4c9e-94f3-8b2cf22e9b6f.mp3" }
-    ]
-  },
-  {
-    char: "ㅍ", romanized: "p", type: "consonant", meaning: "像『破』的氣音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/466c85e6-8ff4-429f-a9d2-04e9bc7818d0.mp3",
-    examples: [
-      { word: "포도", meaning: "葡萄", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c253bdcb-bb9b-48d6-9d45-5ae3dca82326.mp3" },
-      { word: "팔", meaning: "手臂", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/62531fc9-f77a-4cd1-b2a2-bf8106710b88.mp3" }
-    ]
-  },
-  {
-    char: "ㅎ", romanized: "h", type: "consonant", meaning: "像『哈』的氣音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/0e62cc99-e6c9-4080-b0e5-334b142ebc8a.mp3",
-    examples: [
-      { word: "하늘", meaning: "天空", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4003ab23-c02e-4213-9e1e-7cf3f8f7496c.mp3" },
-      { word: "호랑이", meaning: "老虎", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/76f40c5c-7a5f-45f3-a762-4ed9aebda4a4.mp3" }
-    ]
-  },
-  {
-    char: "ㄲ", romanized: "kk", type: "consonant", meaning: "濃音『ㄱ』，發音更緊",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/d019dd55-4974-46a0-acee-88f99b388fe4.mp3",
-    examples: [
-      { word: "꽃", meaning: "花", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/3474cdcb-4708-40ee-9510-0ab724420735.mp3" },
-      { word: "끝", meaning: "結束", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7fa4695d-72cd-44ed-83a3-4db8a7e7fd62.mp3" }
-    ]
-  },
-  {
-    char: "ㄸ", romanized: "tt", type: "consonant", meaning: "濃音『ㄷ』，發音更緊",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f65b25e4-6792-4a0a-8973-7cc0ab5e8d15.mp3",
-    examples: [
-      { word: "딸기", meaning: "草莓", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c9f165a4-27ac-48a4-b0cf-8a7436c3b5ec.mp3" },
-      { word: "떡", meaning: "年糕", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/5cd86d3a-9bfe-4f03-9b62-28ec9a893f08.mp3" }
-    ]
-  },
-  {
-    char: "ㅃ", romanized: "pp", type: "consonant", meaning: "濃音『ㅂ』，雙唇爆破更明顯",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/2fcdd72b-fbbf-4a27-bb91-3c16fc0db6f5.mp3",
-    examples: [
-      { word: "빵", meaning: "麵包", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/99135a64-3bd1-4d70-a64c-0c1eac4d9cd3.mp3" },
-      { word: "뽀뽀", meaning: "親親", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7558cb1a-6f1c-4a99-a901-c1b8cfdd793e.mp3" }
-    ]
-  },
-  {
-    char: "ㅆ", romanized: "ss", type: "consonant", meaning: "濃音『ㅅ』，摩擦更強",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/d72cb7d3-61d7-4976-8a53-497ef0d98268.mp3",
-    examples: [
-      { word: "쌀", meaning: "米", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/789f2f8e-e236-426b-bb53-3f3c83934d71.mp3" },
-      { word: "씻다", meaning: "洗", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7a34e1cf-7f02-41d2-91ce-e1a9cb3895cc.mp3" }
-    ]
-  },
-  {
-    char: "ㅉ", romanized: "jj", type: "consonant", meaning: "濃音『ㅈ』，更有力的爆破音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/37ed36a7-1374-4f34-a87c-f55a50df52a4.mp3",
-    examples: [
-      { word: "짜장면", meaning: "炸醬麵", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c32b53f4-facc-4190-a4d1-c13f4c6703ff.mp3" },
-      { word: "쪼그리다", meaning: "縮著身體", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/980cb54e-d95e-42ae-b448-02a0f0c92c7f.mp3" }
-    ]
-  },
-  {
-    char: "ㄱ", romanized: "g/k", type: "consonant", meaning: "像『哥』的聲音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b315d4ac-b4a1-490f-b0ac-8c9781661555.mp3",
-    examples: [
-      { word: "고기", meaning: "肉", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1f7b18fd-8c6c-4a2e-b7fb-5f2a85ea6be7.mp3" },
-      { word: "가방", meaning: "書包", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1cc82dfc-99d9-446f-a021-e01305e50a45.mp3" }
-    ]
-  },
-  {
-    char: "ㄴ", romanized: "n", type: "consonant", meaning: "像『你』的聲音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/195dfce2-b8a7-4437-906d-cb4058b420b4.mp3",
-    examples: [
-      { word: "누나", meaning: "姊姊（男稱）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/bb5d3b26-b6f6-47b5-bd5f-8d8658ee5d97.mp3" },
-      { word: "나무", meaning: "樹", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b4b709fb-7e1a-4d2a-bc26-1a9d7db1d716.mp3" }
-    ]
-  },
-  {
-    char: "ㄷ", romanized: "d/t", type: "consonant", meaning: "像『的』的聲音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/05f9e1b3-f72b-4233-a85d-fc75cc0dbe2e.mp3",
-    examples: [
-      { word: "달", meaning: "月亮", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/6bfc58db-b5fc-47b0-aafe-c34322f1c185.mp3" },
-      { word: "다리", meaning: "橋、腿", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/cb80d7b3-4c79-4f79-aaa7-b6c92a8d4b87.mp3" }
-    ]
-  },
-  {
-    char: "ㄹ", romanized: "r/l", type: "consonant", meaning: "介於 r 與 l 之間",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4b64db03-6e48-4ae6-8ec4-3c25a1e529c3.mp3",
-    examples: [
-      { word: "라면", meaning: "拉麵", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/5a167441-d3b7-4ef8-b5c1-2ce99fc94de5.mp3" },
-      { word: "바람", meaning: "風", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/9e8a5bdb-80e2-4e57-a64a-967cdb57b4bc.mp3" }
-    ]
-  },
-  {
-    char: "ㅁ", romanized: "m", type: "consonant", meaning: "雙唇閉合後放開，像『媽』的聲音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/9ef2b686-7d18-44d1-981e-b43707d14a66.mp3",
-    examples: [
-      { word: "머리", meaning: "頭", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/ab0110a9-bc4d-4bc7-a80c-781f0d52808d.mp3" },
-      { word: "물", meaning: "水", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/22f7604e-9aa4-48ef-8933-5eb92c79c9b3.mp3" }
-    ]
-  },
-  {
-    char: "ㅂ", romanized: "b/p", type: "consonant", meaning: "像『爸』的聲音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e66a1cb2-bb26-4f62-87fc-132ad99fc4d9.mp3",
-    examples: [
-      { word: "바나나", meaning: "香蕉", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b5f89362-4d38-40bc-81fa-949db9fcdbdf.mp3" },
-      { word: "바다", meaning: "海", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c5011bfa-e296-4a3c-8456-7c4f1a190a55.mp3" }
-    ]
-  },
-  {
-    char: "ㅅ", romanized: "s", type: "consonant", meaning: "舌尖靠近齒齦摩擦音，像『思』的聲音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7d2511db-88b5-46ed-8e52-5ff0c6e24e79.mp3",
-    examples: [
-      { word: "사과", meaning: "蘋果", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e79c1e17-7406-4385-ae30-7d9a34d274f6.mp3" },
-      { word: "신발", meaning: "鞋子", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/d0c78d47-4749-4414-a77d-659c9c63b17b.mp3" }
-    ]
-  },
-  {
-    char: "ㅇ", romanized: "ng / ∅", type: "consonant", meaning: "句首不發音，句尾為鼻音『ng』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/15ef0b66-d3df-46f5-83e2-2b126f63b681.mp3",
-    examples: [
-      { word: "엄마", meaning: "媽媽", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e1cdb016-1ab6-48e0-a876-f47ed4a9d92a.mp3" },
-      { word: "사랑", meaning: "愛", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b169dddb-bc21-4b7b-810e-1790e7cf1a53.mp3" }
-    ]
-  },
-  {
-    char: "ㅈ", romanized: "j", type: "consonant", meaning: "像『姐』的聲音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c45efb0c-05cf-4b54-a2e0-09f0e7b0aa34.mp3",
-    examples: [
-      { word: "자전거", meaning: "腳踏車", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4c3b4b4f-9182-4c70-8e84-352b8de563a4.mp3" },
-      { word: "주스", meaning: "果汁", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/2c3e8f32-11f1-4294-9261-4215f0d4febb.mp3" }
-    ]
-  },
-  {
-    char: "ㅏ", romanized: "a", type: "vowel", meaning: "發『啊』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/50555b7e-3950-4c33-8ae7-1c4099e6f765.mp3",
-    examples: [
-      { word: "아기", meaning: "嬰兒", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/5f5e9d9e-3f3e-4b8d-92ef-799f29f7d2fc.mp3" },
-      { word: "아빠", meaning: "爸爸", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/64ff62db-82b5-4f3f-9a97-9eb1533a2846.mp3" }
-    ]
-  },
-  {
-    char: "ㅓ", romanized: "eo", type: "vowel", meaning: "嘴型扁扁地發『喔』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/fd15285d-0625-4ee1-9cfa-5bfaeb239f43.mp3",
-    examples: [
-      { word: "엄마", meaning: "媽媽", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e1cdb016-1ab6-48e0-a876-f47ed4a9d92a.mp3" },
-      { word: "언니", meaning: "姊姊（女稱）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/df9a5091-bd2a-4651-8618-5c6f662dfb92.mp3" }
-    ]
-  },
-  {
-    char: "ㅗ", romanized: "o", type: "vowel", meaning: "嘴唇收圓發『喔』音（短）",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4c208b9f-6a6e-4d42-bffd-0e3188dfc37f.mp3",
-    examples: [
-      { word: "오이", meaning: "小黃瓜", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/99bbdf2e-3a76-496d-a2d8-2fc233dfcab3.mp3" },
-      { word: "오빠", meaning: "哥哥（女稱）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c1291b86-4417-43a2-9dd5-5ee4dffb1da4.mp3" }
-    ]
-  },
-  {
-    char: "ㅜ", romanized: "u", type: "vowel", meaning: "嘴巴突起發『嗚』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/11eaf4ef-71a5-40ae-8a86-8ff097530b42.mp3",
-    examples: [
-      { word: "우유", meaning: "牛奶", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/42c316a0-217a-4c92-a64f-05873b11d946.mp3" },
-      { word: "우리", meaning: "我們", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f5037dc5-0c0b-4341-97f5-8ffb6b6f7a13.mp3" }
-    ]
-  },
-  {
-    char: "ㅣ", romanized: "i", type: "vowel", meaning: "發『衣』的音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/75f5ec3e-8f95-4b7d-a4e5-5fc1fa64ae20.mp3",
-    examples: [
-      { word: "이름", meaning: "名字", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/11ce53e8-37cc-4213-a80c-6c6f7d7b3a36.mp3" },
-      { word: "이빨", meaning: "牙齒", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b6e71720-7161-4c06-9df1-8046318e7ae4.mp3" }
-    ]
-  },
-  {
-    char: "ㅡ", romanized: "eu", type: "vowel", meaning: "發『呃』音，嘴唇扁平",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/c92d31e6-2fd9-4300-8a7f-cb74254bcbd4.mp3",
-    examples: [
-      { word: "의자", meaning: "椅子", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/ca2fc4b0-305c-4db8-84e2-36cb3076cb7d.mp3" },
-      { word: "음료수", meaning: "飲料", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/538aa49b-c76e-40d2-8c3f-1b0a2756e351.mp3" }
-    ]
-  },
-  {
-    char: "ㅐ", romanized: "ae", type: "vowel", meaning: "發音接近『欸』，類似英文 bed 的 e",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b35d1175-9f2d-4cdd-8021-5fcf49825637.mp3",
-    examples: [
-      { word: "개", meaning: "狗", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/8f6783e4-6eb8-4e8b-bf89-0f91f8675bd9.mp3" },
-      { word: "배게", meaning: "枕頭", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1f00be3a-f32f-4b77-93ce-d0dbf36e4579.mp3" }
-    ]
-  },
-  {
-    char: "ㅔ", romanized: "e", type: "vowel", meaning: "發音略短於 ㅐ，也接近『欸』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/00617dfb-c5f5-4fc7-83c2-5f8c2d16875d.mp3",
-    examples: [
-      { word: "네", meaning: "是", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/b500d054-4a4b-421f-a2e0-8a9711a2d10f.mp3" },
-      { word: "세수", meaning: "洗臉", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/1938be68-d701-4e34-857e-8d27dfc85782.mp3" }
-    ]
-  },
-  {
-    char: "ㅒ", romanized: "yae", type: "vowel", meaning: "加了 y 音的 ㅐ，像『耶』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/d6db6716-0d0d-42be-822b-3c130b05a419.mp3",
-    examples: [
-      { word: "얘기", meaning: "談話、故事", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/0b160961-3e50-4953-8ac0-fdf72c07ad01.mp3" },
-      { word: "얘", meaning: "這孩子", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f07a2b60-9b88-4c35-8854-7edbc7c39756.mp3" }
-    ]
-  },
-  {
-    char: "ㅖ", romanized: "ye", type: "vowel", meaning: "加了 y 音的 ㅔ，像『也』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f017ea64-dcd5-4df2-8e58-4c0649ec4ae3.mp3",
-    examples: [
-      { word: "예쁜", meaning: "漂亮的", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/cf437e9b-0c9a-4db6-8ac1-e06543e89c89.mp3" },
-      { word: "예", meaning: "是的（敬語）", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/bcc3e0fc-e1a5-4f39-bb3e-d29cde9d93e3.mp3" }
-    ]
-  },
-  {
-    char: "ㅘ", romanized: "wa", type: "vowel", meaning: "ㅗ + ㅏ 的複合音，發音像『哇』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/44ba95a5-bba4-4346-bc55-2e57433b3795.mp3",
-    examples: [
-      { word: "사과", meaning: "蘋果", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e79c1e17-7406-4385-ae30-7d9a34d274f6.mp3" },
-      { word: "과자", meaning: "餅乾", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/76d8933c-89f4-4b4c-9b9c-e705a2eaeec8.mp3" }
-    ]
-  },
-  {
-    char: "ㅙ", romanized: "wae", type: "vowel", meaning: "ㅗ + ㅐ 的複合音，接近英文 when 的開頭",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/390cf3e6-fd82-4624-a623-3a82f503af5c.mp3",
-    examples: [
-      { word: "왜", meaning: "為什麼", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7605aaf8-6cd7-4a38-9319-7e75ef1a775d.mp3" },
-      { word: "외워요", meaning: "背起來", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f9f05365-4567-4eb6-a07a-6f7b67b2ea5a.mp3" }
-    ]
-  },
-  {
-    char: "ㅚ", romanized: "oe", type: "vowel", meaning: "發音近似英文 way 的開頭",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f8d2d178-63dc-4e1e-8079-3ea3a4cda1aa.mp3",
-    examples: [
-      { word: "외국", meaning: "外國", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/3e9fc4ce-6ff2-45b6-b202-f4d94f2e8f6a.mp3" },
-      { word: "외모", meaning: "外貌", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/fe36ed8a-f8c7-4fc9-b206-dc772ebd927e.mp3" }
-    ]
-  },
-  {
-    char: "ㅝ", romanized: "wo", type: "vowel", meaning: "ㅜ + ㅓ 的複合音，發『喔』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7c7353a4-6e5e-4d66-9d52-e312ccf35937.mp3",
-    examples: [
-      { word: "워터", meaning: "水 (外來語)", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/08b0b7ee-f738-49c2-a469-800a0e3f1088.mp3" },
-      { word: "원하다", meaning: "希望", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f4788b99-f41e-4a79-9ac8-3fa407b96128.mp3" }
-    ]
-  },
-  {
-    char: "ㅞ", romanized: "we", type: "vowel", meaning: "ㅜ + ㅔ 的複合音，接近『威』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/81d57d6c-9e92-4fa8-84a5-b9fbd3bdcb8b.mp3",
-    examples: [
-      { word: "웨딩", meaning: "婚禮", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/9c1e9054-5c4a-476b-816b-f435ea9b01d4.mp3" },
-      { word: "웨이터", meaning: "服務生", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4b9adf6e-cc25-4c19-aba5-5ae0206a78de.mp3" }
-    ]
-  },
-  {
-    char: "ㅟ", romanized: "wi", type: "vowel", meaning: "ㅜ + ㅣ 的複合音，發『we』音",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/ebea4e5d-2f7d-4ce7-8182-9bafc929f438.mp3",
-    examples: [
-      { word: "위", meaning: "上面、胃", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/32c5446c-6da3-47b0-9a07-80d55a9883a1.mp3" },
-      { word: "위험", meaning: "危險", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/dfbbccf8-618b-463e-b58b-58f414f4761f.mp3" }
-    ]
-  },
-  {
-    char: "ㅢ", romanized: "ui", type: "vowel", meaning: "特殊母音，像『呃依』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/cc0652f3-0ef2-4cf2-a1da-17de3e832b1a.mp3",
-    examples: [
-      { word: "의사", meaning: "醫生", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/4b8d55cc-80ec-40b3-9613-98c2b0b2eb36.mp3" },
-      { word: "의자", meaning: "椅子", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/ca2fc4b0-305c-4db8-84e2-36cb3076cb7d.mp3" }
-    ]
-  },
-  {
-    char: "ㅑ", romanized: "ya", type: "vowel", meaning: "加了 y 音的 ㅏ，像『呀』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/91c3fbd0-50ec-4f6f-b9b2-93c07ff7e179.mp3",
-    examples: [
-      { word: "야채", meaning: "蔬菜", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/5d9e42c0-fc8f-4c8e-a1d5-ff6fc5076f92.mp3" },
-      { word: "야구", meaning: "棒球", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/875b6f7b-3a8e-4b13-bfc0-e1f7e07d9a9b.mp3" }
-    ]
-  },
-  {
-    char: "ㅕ", romanized: "yeo", type: "vowel", meaning: "加了 y 音的 ㅓ，像『唷』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/2c55b858-0fd6-4e91-b924-7c688db3e165.mp3",
-    examples: [
-      { word: "여자", meaning: "女生", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/476f011e-00fd-4d94-bba9-5fa11d7b30e2.mp3" },
-      { word: "역사", meaning: "歷史", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/f3c95093-21ef-417e-b55d-df22e8471f3e.mp3" }
-    ]
-  },
-  {
-    char: "ㅛ", romanized: "yo", type: "vowel", meaning: "加了 y 音的 ㅗ，像『唷』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/110b0167-ec2a-48c6-baca-50e74de3ed2b.mp3",
-    examples: [
-      { word: "요리", meaning: "料理", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/7e396a9a-818f-4182-820b-875a5386a866.mp3" },
-      { word: "요즘", meaning: "最近", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/3abf2157-06c0-4a86-8db4-77d2a91cb7fc.mp3" }
-    ]
-  },
-  {
-    char: "ㅠ", romanized: "yu", type: "vowel", meaning: "加了 y 音的 ㅜ，像『呦』",
-    audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/2ac4ff2a-c0ae-4e31-8072-0879dbdabcb2.mp3",
-    examples: [
-      { word: "유리", meaning: "玻璃", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/e6b70b3f-8db2-4a71-8a2b-f24ff7fc7e87.mp3" },
-      { word: "휴지", meaning: "衛生紙", audio: "https://dict.naver.com/file/ttsPron/ko/2017/42/bdb65f12-dcb9-4f2e-9cbe-85dfb65dfb57.mp3" }
-    ]
-  }
-];
-let current = 0;
-let mode = 'all';
-let stats = { todayCount: 0, streak: 0, weeklyLearned: 0 };
-
-// 綁定事件
 document.getElementById('tab-all').addEventListener('click', () => setMode('all'));
 document.getElementById('tab-vowel').addEventListener('click', () => setMode('vowel'));
 document.getElementById('tab-consonant').addEventListener('click', () => setMode('consonant'));
-document.getElementById('next-btn').addEventListener('click', resetCard);
-document.getElementById('flashcard').addEventListener('click', flipCard);
 
-// 初始化
-updateStats();
+function setMode(m) {
+  mode = m;
+  flipped = false;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${m}`).classList.add('active');
+  render();
+}
+
 render();
 </script>
 </body>

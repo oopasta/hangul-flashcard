@@ -36,7 +36,7 @@
     <button id="tab-consonant">Consonants (19)</button>
   </div>
   <div class="card" id="flashcard">
-    <div class="char" id="char">?</div>
+    <div class="char" id="char"><img id="placeholder" src="placeholder.png" alt="?" style="width: 180px; display: none;"></div>
     <div class="romanized" id="romanized"></div>
     <div class="meaning" id="meaning"></div>
     <div class="examples" id="examples"></div>
@@ -46,10 +46,6 @@
   </div>
 <script>
 const allData = [
-  { char: "ㅏ", romanized: "a", type: "vowel", meaning: "像『啊』的發音", examples: [ { word: "아빠", meaning: "爸爸" }, { word: "사랑", meaning: "愛" } ] },
-  { char: "ㅓ", romanized: "eo", type: "vowel", meaning: "像『喔』的發音", examples: [ { word: "어머니", meaning: "母親" }, { word: "걱정", meaning: "擔心" } ] },
-  { char: "ㅑ", romanized: "ya", type: "vowel", meaning: "像『啊』的發音，前加 y", examples: [ { word: "야채", meaning: "蔬菜" }, { word: "야구", meaning: "棒球" } ] },
-  { char: "ㅕ", romanized: "yeo", type: "vowel", meaning: "像『喔』的發音，前加 y", examples: [ { word: "여자", meaning: "女生" }, { word: "역사", meaning: "歷史" } ] },
   { char: "ㄱ", romanized: "g/k", type: "consonant", meaning: "像英文的 g 或 k 音", examples: [ { word: "가방", meaning: "書包" }, { word: "꿈", meaning: "夢想" } ] },
   { char: "ㄴ", romanized: "n", type: "consonant", meaning: "像英文的 n 音", examples: [ { word: "나무", meaning: "樹" }, { word: "눈", meaning: "雪" } ] },
   { char: "ㄷ", romanized: "d/t", type: "consonant", meaning: "像英文的 d 或 t 音", examples: [ { word: "다리", meaning: "橋" }, { word: "달", meaning: "月亮" } ] },
@@ -69,17 +65,20 @@ const allData = [
   { char: "ㅃ", romanized: "pp", type: "consonant", meaning: "濃音 pp", examples: [ { word: "빵", meaning: "麵包" }, { word: "뽀뽀", meaning: "親親" } ] },
   { char: "ㅆ", romanized: "ss", type: "consonant", meaning: "濃音 ss", examples: [ { word: "쓰다", meaning: "寫" }, { word: "쌀", meaning: "米" } ] },
   { char: "ㅉ", romanized: "jj", type: "consonant", meaning: "濃音 jj", examples: [ { word: "짜다", meaning: "鹹" }, { word: "쯤", meaning: "左右、大約" } ] },
-
-  { char: "ㅐ", romanized: "ae", type: "vowel", meaning: "像『欸』的發音", examples: [ { word: "애기", meaning: "小孩" }, { word: "해", meaning: "太陽" } ] },
-  { char: "ㅔ", romanized: "e", type: "vowel", meaning: "像『欸』但略短", examples: [ { word: "에어컨", meaning: "冷氣" }, { word: "세수", meaning: "洗臉" } ] },
-  { char: "ㅒ", romanized: "yae", type: "vowel", meaning: "像『欸』前加 y", examples: [ { word: "얘기", meaning: "談話" }, { word: "얘", meaning: "這孩子" } ] },
-  { char: "ㅖ", romanized: "ye", type: "vowel", meaning: "像『耶』音", examples: [ { word: "예쁜", meaning: "漂亮" }, { word: "예", meaning: "是" } ] },
+  { char: "ㅏ", romanized: "a", type: "vowel", meaning: "像『啊』的發音", examples: [ { word: "아빠", meaning: "爸爸" }, { word: "사랑", meaning: "愛" } ] },
+  { char: "ㅑ", romanized: "ya", type: "vowel", meaning: "像『啊』的發音，前加 y", examples: [ { word: "야채", meaning: "蔬菜" }, { word: "야구", meaning: "棒球" } ] },
+  { char: "ㅓ", romanized: "eo", type: "vowel", meaning: "像『喔』的發音", examples: [ { word: "어머니", meaning: "母親" }, { word: "걱정", meaning: "擔心" } ] },
+  { char: "ㅕ", romanized: "yeo", type: "vowel", meaning: "像『喔』的發音，前加 y", examples: [ { word: "여자", meaning: "女生" }, { word: "역사", meaning: "歷史" } ] },
   { char: "ㅗ", romanized: "o", type: "vowel", meaning: "像『喔』收口音", examples: [ { word: "오빠", meaning: "哥哥" }, { word: "고기", meaning: "肉" } ] },
   { char: "ㅛ", romanized: "yo", type: "vowel", meaning: "像英文 yo", examples: [ { word: "요리", meaning: "料理" }, { word: "요즘", meaning: "最近" } ] },
   { char: "ㅜ", romanized: "u", type: "vowel", meaning: "像英文的 oo", examples: [ { word: "우유", meaning: "牛奶" }, { word: "문", meaning: "門" } ] },
   { char: "ㅠ", romanized: "yu", type: "vowel", meaning: "像英文 you", examples: [ { word: "유리", meaning: "玻璃" }, { word: "휴지", meaning: "衛生紙" } ] },
   { char: "ㅡ", romanized: "eu", type: "vowel", meaning: "嘴平扁發音 eu", examples: [ { word: "으쓱", meaning: "聳肩" }, { word: "음악", meaning: "音樂" } ] },
   { char: "ㅣ", romanized: "i", type: "vowel", meaning: "像英文 e 音", examples: [ { word: "이름", meaning: "名字" }, { word: "길", meaning: "路" } ] },
+  { char: "ㅐ", romanized: "ae", type: "vowel", meaning: "像『欸』的發音", examples: [ { word: "애기", meaning: "小孩" }, { word: "해", meaning: "太陽" } ] },
+  { char: "ㅔ", romanized: "e", type: "vowel", meaning: "像『欸』但略短", examples: [ { word: "에어컨", meaning: "冷氣" }, { word: "세수", meaning: "洗臉" } ] },
+  { char: "ㅒ", romanized: "yae", type: "vowel", meaning: "像『欸』前加 y", examples: [ { word: "얘기", meaning: "談話" }, { word: "얘", meaning: "這孩子" } ] },
+  { char: "ㅖ", romanized: "ye", type: "vowel", meaning: "像『耶』音", examples: [ { word: "예쁜", meaning: "漂亮" }, { word: "예", meaning: "是" } ] },
   { char: "ㅘ", romanized: "wa", type: "vowel", meaning: "像『哇』音", examples: [ { word: "와인", meaning: "紅酒" }, { word: "과일", meaning: "水果" } ] },
   { char: "ㅙ", romanized: "wae", type: "vowel", meaning: "像『呱欸』音", examples: [ { word: "왜", meaning: "為什麼" }, { word: "괜찮아", meaning: "沒關係" } ] },
   { char: "ㅚ", romanized: "oe", type: "vowel", meaning: "像『唉』音", examples: [ { word: "외국", meaning: "外國" }, { word: "회사", meaning: "公司" } ] },
@@ -88,11 +87,11 @@ const allData = [
   { char: "ㅟ", romanized: "wi", type: "vowel", meaning: "像英文 we 音", examples: [ { word: "위", meaning: "上" }, { word: "위험", meaning: "危險" } ] },
   { char: "ㅢ", romanized: "ui", type: "vowel", meaning: "嘴型扁小難發音", examples: [ { word: "의자", meaning: "椅子" }, { word: "의사", meaning: "醫生" } ] }
 ];
-
 let current = 0;
 let flipped = false;
 let mode = 'all';
 let stats = { todayCount: 0, days: 0, progress: 0 };
+let todayKey = `card-${mode}-` + new Date().toISOString().split('T')[0];
 
 function filteredData() {
   if (mode === 'vowel') return allData.filter(d => d.type === 'vowel');
@@ -102,7 +101,7 @@ function filteredData() {
 
 function render() {
   const d = flipped ? filteredData()[current] : null;
-  document.getElementById('char').innerText = flipped ? d.char : '?';
+  document.getElementById('char').innerHTML = flipped ? d.char : '<img id="placeholder" src="placeholder.png" alt="?" style="width: 180px;">';
   document.getElementById('romanized').innerText = flipped ? d.romanized : '';
   document.getElementById('meaning').innerText = flipped ? d.meaning : '';
   document.getElementById('examples').innerHTML = flipped ? d.examples.map(e => `${e.word}（${e.meaning}）`).join('<br>') : '';
@@ -111,12 +110,12 @@ function render() {
 
 document.getElementById('flashcard').addEventListener('click', () => {
   if (!flipped) {
-    const stored = localStorage.getItem(`card-${mode}`);
+    const stored = localStorage.getItem(todayKey);
     if (stored) {
       current = parseInt(stored);
     } else {
       current = Math.floor(Math.random() * filteredData().length);
-      localStorage.setItem(`card-${mode}`, current);
+      localStorage.setItem(todayKey, current);
     }
     flipped = true;
     stats.todayCount++;
@@ -126,7 +125,7 @@ document.getElementById('flashcard').addEventListener('click', () => {
 
 document.getElementById('next-btn').addEventListener('click', () => {
   current = Math.floor(Math.random() * filteredData().length);
-  localStorage.setItem(`card-${mode}`, current);
+  localStorage.setItem(todayKey, current);
   flipped = true;
   stats.todayCount++;
   render();
@@ -139,6 +138,7 @@ document.getElementById('tab-consonant').addEventListener('click', () => setMode
 function setMode(m) {
   mode = m;
   flipped = false;
+  todayKey = `card-${mode}-` + new Date().toISOString().split('T')[0];
   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
   document.getElementById(`tab-${m}`).classList.add('active');
   render();
